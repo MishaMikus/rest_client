@@ -23,6 +23,3 @@ hs_err_pid*
 .idea/modules.xml
 .idea/rest_client.iml
 .idea/workspace.xml
-configuration.properties
-pom.xml
-src/
