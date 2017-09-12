@@ -23,3 +23,6 @@ hs_err_pid*
 .idea/modules.xml
 .idea/rest_client.iml
 .idea/workspace.xml
+.idea/compiler.xml
+.idea/libraries/
+.idea/misc.xml
