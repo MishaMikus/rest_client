@@ -1,1 +1,2 @@
+mvn -v
 mvn deploy
