@@ -1,4 +1,1 @@
-c:
-cd %programfiles(x86)%/JetBrains
-dir
-mvn deploy
+maven3\bin\mvn.cmd deploy
