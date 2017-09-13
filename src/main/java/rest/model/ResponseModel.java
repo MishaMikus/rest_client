@@ -2,7 +2,19 @@ package rest.model;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.parser.Parser;
+import org.w3c.dom.Node;
+import org.w3c.dom.bootstrap.DOMImplementationRegistry;
+import org.w3c.dom.ls.DOMImplementationLS;
+import org.w3c.dom.ls.LSSerializer;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,8 +26,8 @@ public class ResponseModel {
     private Integer statusCode;
     private Long responseTime;
     private Date headerDate;
-    private Map<String, String> cookiesMap=new HashMap<>();
-    private Map<String, String> headerMap=new HashMap<>();
+    private Map<String, String> cookiesMap = new HashMap<>();
+    private Map<String, String> headerMap = new HashMap<>();
 
     public Long getStart() {
         return start;
@@ -107,6 +119,57 @@ public class ResponseModel {
             e.printStackTrace();
         }
         return res;
+    }
+
+    //Content-Type=text/html;
+
+    public String getPrettyPrintBody() {
+
+        if ("text/html".equals(headerMap.get("Content-Type"))) {
+            return getPrettyPrintBodyHTML();
+        }
+
+        if ("text/xml".equals(headerMap.get("Content-Type"))) {
+            return getPrettyPrintBodyXML();
+        }
+
+        if ("application/json".equals(headerMap.get("Content-Type"))) {
+            return body.trim().startsWith("[") ? getBodyAsJsonArray().toString() : getBodyAsJson().toString();
+        }
+
+        return body;
+    }
+
+    private String getPrettyPrintBodyHTML() {
+        return Jsoup.parse(body, "", Parser.htmlParser()).toString();
+    }
+
+    public String getPrettyPrintBodyXML() {
+        InputSource src = new InputSource(new StringReader(body));
+        Node document = null;
+        try {
+            document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                    .parse(src).getDocumentElement();
+        } catch (SAXException | ParserConfigurationException | IOException e) {
+            e.printStackTrace();
+        }
+        Boolean keepDeclaration = Boolean.valueOf(body.startsWith("<?xml"));
+        System.setProperty(DOMImplementationRegistry.PROPERTY,
+                "com.sun.org.apache.xerces.internal.dom.DOMImplementationSourceImpl");
+
+        DOMImplementationRegistry registry = null;
+        try {
+            registry = DOMImplementationRegistry.newInstance();
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        DOMImplementationLS impl = (DOMImplementationLS) registry
+                .getDOMImplementation("LS");
+        LSSerializer writer = impl.createLSSerializer();
+
+        writer.getDomConfig().setParameter("format-pretty-print", Boolean.TRUE);
+        writer.getDomConfig().setParameter("xml-declaration", keepDeclaration);
+        return writer.writeToString(document);
     }
 
     String getStatusLine() {

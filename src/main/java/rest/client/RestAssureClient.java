@@ -130,7 +130,7 @@ public class RestAssureClient implements RestClient {
             //RETURN
             if (validatableResponse != null) {
                 responseModel = transform(responseModel, validatableResponse.extract().response());
-               cookies.putAll(responseModel.getCookiesMap());
+                cookies.putAll(responseModel.getCookiesMap());
             }
         } else {
             LOGGER.warn("RESPONSE is null");
