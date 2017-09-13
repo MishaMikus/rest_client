@@ -14,7 +14,6 @@ public class ApacheClientTest {
         requestModel.setPath("/");
         requestModel.setMethod("GET");
         requestModel.setProtocol("https://");
-        System.out.println("getPrettyPrintBody : " + restAssureClient.call(requestModel).getPrettyPrintBody());
         Assert.assertNotNull(restAssureClient.call(requestModel).getBody());
     }
 }
