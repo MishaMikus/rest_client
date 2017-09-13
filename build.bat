@@ -1,1 +1,1 @@
-maven3\bin\mvn.cmd deploy
+mvn deploy
