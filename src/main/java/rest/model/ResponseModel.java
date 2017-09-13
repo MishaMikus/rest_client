@@ -1,5 +1,6 @@
 package rest.model;
 
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -20,6 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ResponseModel {
+
+    public final Logger LOGGER = Logger.getLogger(this.getClass());
+
     private Long start;
     private String body;
     private String statusLine;
@@ -125,18 +129,21 @@ public class ResponseModel {
 
     public String getPrettyPrintBody() {
 
-        if ("text/html".equals(headerMap.get("Content-Type"))) {
+        String contentType = headerMap.get("Content-Type");
+
+        if ("text/html".equals(contentType)) {
             return getPrettyPrintBodyHTML();
         }
 
-        if ("text/xml".equals(headerMap.get("Content-Type"))) {
+        if ("text/xml".equals(contentType)) {
             return getPrettyPrintBodyXML();
         }
 
-        if ("application/json".equals(headerMap.get("Content-Type"))) {
+        if ("application/json".equals(contentType)) {
             return body.trim().startsWith("[") ? getBodyAsJsonArray().toString() : getBodyAsJson().toString();
         }
 
+        LOGGER.warn("can't do prettyPrint for '" + contentType + "'");
         return body;
     }
 
