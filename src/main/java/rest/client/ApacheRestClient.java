@@ -2,8 +2,11 @@ package rest.client;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.ProtocolException;
 import org.apache.http.client.CookieStore;
+import org.apache.http.client.RedirectStrategy;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.StringEntity;
@@ -11,10 +14,14 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.DefaultRedirectStrategy;
+import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HttpContext;
+import org.apache.log4j.Logger;
 import rest.model.RequestModel;
 import rest.model.ResponseModel;
 
@@ -28,6 +35,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ApacheRestClient implements RestClient {
+
+    public final Logger LOGGER = Logger.getLogger(this.getClass());
 
     @Override
     public ResponseModel call(RequestModel requestModel) {
@@ -43,7 +52,7 @@ public class ApacheRestClient implements RestClient {
             };
 
             //URL
-            URI uri=new URI(requestModel.getURLWithQuery());
+            URI uri = new URI(requestModel.getURLWithQuery());
             System.out.println(uri);
             request.setURI(uri);
 
@@ -92,24 +101,45 @@ public class ApacheRestClient implements RestClient {
 
 
         //FOLLOW_REDIRECTS
-        //TODO
+        RedirectStrategy redirectStrategy = new DefaultRedirectStrategy() {
+            @Override
+            public boolean isRedirected(HttpRequest request, HttpResponse response, HttpContext context) throws ProtocolException {
+                Boolean res = super.isRedirected(request, response, context);
+                if (requestModel.getFollowRedirects() != null
+                        && !requestModel.getFollowRedirects()
+                        && !res) {
+                    LOGGER.info("Default Client would like to redirect? but custom followRedirect = false");
+                    return false;
+                }
+                return res;
+            }
+        };
+        if (httpClient != null) {
+            httpClient.setRedirectStrategy(redirectStrategy);
+        }
 
         //===========SEND======>>>====GET=RESPONSE===========
         HttpResponse response = null;
         ResponseModel responseModel = null;
         Date start = new Date();
         try {
-            response = httpClient.execute(request);
+            if (httpClient != null) {
+                response = httpClient.execute(request);
+            }
             responseModel = new ResponseModel();
 
 
             //RESPONSE STATUS LINE
-            responseModel.setStatusLine(response.getStatusLine().toString());
+            if (response != null) {
+                responseModel.setStatusLine(response.getStatusLine().toString());
+            }
 
             responseModel.setBody(getBody(response));
 
             //RESPONSE CODE
-            responseModel.setStatusCode(response.getStatusLine().getStatusCode());
+            if (response != null) {
+                responseModel.setStatusCode(response.getStatusLine().getStatusCode());
+            }
 
             //RESPONSE TIME
             responseModel.setStart(start.getTime());
