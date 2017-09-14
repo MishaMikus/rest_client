@@ -186,8 +186,20 @@ public class RestAssureClient implements RestClient {
         clientConfig = clientConfig.httpClientFactory(() -> {
             HttpClient rv = new SystemDefaultHttpClient();
             HttpParams httpParams = rv.getParams();
-            HttpConnectionParams.setConnectionTimeout(httpParams, Integer.parseInt(PropertyUtils.getProperty("restassured.client.connection.timeout.second")) * 1000); //Wait 5s for a connection
-            HttpConnectionParams.setSoTimeout(httpParams, Integer.parseInt(PropertyUtils.getProperty("restassured.client.session.timeout.second")) * 1000); // Default session is 60s
+
+            String restassured_client_connection_timeout_second =
+                    PropertyUtils.getProperty("restassured.client.connection.timeout.second");
+            if (restassured_client_connection_timeout_second == null) {
+                restassured_client_connection_timeout_second = "10";
+            }
+
+            String restassured_client_session_timeout_second =
+                    PropertyUtils.getProperty("restassured.client.session.timeout.second");
+            if (restassured_client_session_timeout_second == null) {
+                restassured_client_session_timeout_second = "10";
+            }
+            HttpConnectionParams.setConnectionTimeout(httpParams, Integer.parseInt(restassured_client_connection_timeout_second) * 1000); //Wait 5s for a connection
+            HttpConnectionParams.setSoTimeout(httpParams, Integer.parseInt(restassured_client_session_timeout_second) * 1000); // Default session is 60s
             return rv;
         });
 
